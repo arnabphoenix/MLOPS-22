@@ -11,12 +11,21 @@ hand-written digits, from 0-9.
 # Author: Gael Varoquaux <gael dot varoquaux at normalesup dot org>
 # License: BSD 3 clause
 
+
+
+
+#PART:library dependencies -- sklearn,tensorflow,transformer,numpy,torch
 # Standard scientific Python imports
 import matplotlib.pyplot as plt
 
 # Import datasets, classifiers and performance metrics
 from sklearn import datasets, svm, metrics
 from sklearn.model_selection import train_test_split
+
+GAMMA = 0.001
+train_frac =0.8
+test_frac = 0.1
+dev_frac = 0.1
 
 ###############################################################################
 # Digits dataset
@@ -32,8 +41,11 @@ from sklearn.model_selection import train_test_split
 # Note: if we were working from image files (e.g., 'png' files), we would load
 # them using :func:`matplotlib.pyplot.imread`.
 
+
+#PART: load dataset -- data from csv,jsonl,pickle,tsv
 digits = datasets.load_digits()
 
+#PART: Sanity Check Visualization of the data
 _, axes = plt.subplots(nrows=1, ncols=4, figsize=(10, 3))
 for ax, image, label in zip(axes, digits.images, digits.target):
     ax.set_axis_off()
@@ -55,27 +67,61 @@ for ax, image, label in zip(axes, digits.images, digits.target):
 # subsequently be used to predict the value of the digit for the samples
 # in the test subset.
 
+#PART:data pre-processing -- to remove some noise,to normailze data,format the data to consumed by model
+#converting every image to a single array
 # flatten the images
 n_samples = len(digits.images)
 data = digits.images.reshape((n_samples, -1))
 
-# Create a classifier: a support vector classifier
-clf = svm.SVC(gamma=0.001)
+#PART: Define the model
+#PART: Setting the hyperparameter
 
-# Split data into 50% train and 50% test subsets
-X_train, X_test, y_train, y_test = train_test_split(
-    data, digits.target, test_size=0.5, shuffle=False
+# Create a classifier: a support vector classifier
+clf = svm.SVC()
+#PART: Setting the hyperparameter
+hyper_params = {'gamma':GAMMA}
+clf.set_params(**hyper_params)
+
+#PART:define train/dev/test splits of experiment protocol
+#train to train model
+# dev to set hyperparameters of the model
+#test to evaluate the performance of the model
+
+#80:10:10 train:dev:test
+
+dev_test_frac = 1-train_frac
+
+X_train, X_dev_test, y_train, y_dev_test = train_test_split(
+    data, digits.target, test_size=dev_test_frac, shuffle=True
 )
 
+# dev_frac/(test_frac + dev_frac)
+
+X_test, X_dev, y_test, y_dev = train_test_split(
+    X_dev_test, y_dev_test, test_size=(dev_frac)/dev_test_frac, shuffle=True
+)
+
+
+# if testing on the same as training set: the performance metrics may overestimate the goodness of the model
+#you want to test on "unseen" samples.
+#train to train model
+#dev to set hyperparameter of the model
+#test to evaluate the performance of the model
+
+
+#Train model
 # Learn the digits on the train subset
 clf.fit(X_train, y_train)
 
+#Part:Get test set predictions
 # Predict the value of the digit on the test subset
 predicted = clf.predict(X_test)
 
 ###############################################################################
 # Below we visualize the first 4 test samples and show their predicted
 # digit value in the title.
+
+#PART: Sanity check of predictions
 
 _, axes = plt.subplots(nrows=1, ncols=4, figsize=(10, 3))
 for ax, image, prediction in zip(axes, X_test, predicted):
@@ -88,6 +134,7 @@ for ax, image, prediction in zip(axes, X_test, predicted):
 # :func:`~sklearn.metrics.classification_report` builds a text report showing
 # the main classification metrics.
 
+#PART: Compute evaluation metrics
 print(
     f"Classification report for classifier {clf}:\n"
     f"{metrics.classification_report(y_test, predicted)}\n"
