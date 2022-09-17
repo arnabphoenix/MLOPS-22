@@ -19,10 +19,29 @@ hand-written digits, from 0-9.
 import matplotlib.pyplot as plt
 
 # Import datasets, classifiers and performance metrics
-from sklearn import datasets, svm, metrics
+from sklearn import datasets, svm
+from sklearn.metrics import classification_report
 from sklearn.model_selection import train_test_split
 
-GAMMA = 0.001
+#1.Set the ranges of the hyperparameter
+gamma_list = [0.01 ,0.005, 0.001, 0.0005, 0.0001 ]
+c_list = [0.1, 0.2, 0.5, 0.7, 1, 2, 3, 7, 10]
+
+h_param_comb = [{'gamma':g, 'C':c} for g in gamma_list for c in c_list]
+
+assert len(h_param_comb) == len(gamma_list)*len(c_list)
+
+
+
+#1.Set the ranges of the hyperparameter
+#2.Train for every combinATION OF HYPERPARAMETER VALUES
+#2.a.Train the model
+#2.b.Compute the accuracy of the validatin set
+#3.Identify the best combination of hyperparameters for which validation set accuracy is the highest
+#4.Report the test set accuracy with the best model
+
+
+
 train_frac =0.8
 test_frac = 0.1
 dev_frac = 0.1
@@ -72,51 +91,69 @@ for ax, image, label in zip(axes, digits.images, digits.target):
 # flatten the images
 n_samples = len(digits.images)
 data = digits.images.reshape((n_samples, -1))
-
+print("Size of Images in Dataset is ", digits.images[0].shape)
 #PART: Define the model
 #PART: Setting the hyperparameter
+image_sizes = [12, 16, 20]
+for cur_h_params in h_param_comb:
+    
+
 
 # Create a classifier: a support vector classifier
-clf = svm.SVC()
+    clf = svm.SVC()
 #PART: Setting the hyperparameter
-hyper_params = {'gamma':GAMMA}
-clf.set_params(**hyper_params)
+    hyper_params = cur_h_params
+    clf.set_params(**hyper_params)
 
-#PART:define train/dev/test splits of experiment protocol
-#train to train model
-# dev to set hyperparameters of the model
-#test to evaluate the performance of the model
+    #PART:define train/dev/test splits of experiment protocol
+    #train to train model
+    # dev to set hyperparameters of the model
+    #test to evaluate the performance of the model
 
-#80:10:10 train:dev:test
+    #80:10:10 train:dev:test
 
-dev_test_frac = 1-train_frac
+    dev_test_frac = 1-train_frac
 
-X_train, X_dev_test, y_train, y_dev_test = train_test_split(
-    data, digits.target, test_size=dev_test_frac, shuffle=True
-)
+    X_train, X_dev_test, y_train, y_dev_test = train_test_split(
+        data, digits.target, test_size=dev_test_frac, shuffle=True
+    )
 
-# dev_frac/(test_frac + dev_frac)
+    # dev_frac/(test_frac + dev_frac)
 
-X_test, X_dev, y_test, y_dev = train_test_split(
-    X_dev_test, y_dev_test, test_size=(dev_frac)/dev_test_frac, shuffle=True
-)
-
-
-# if testing on the same as training set: the performance metrics may overestimate the goodness of the model
-#you want to test on "unseen" samples.
-#train to train model
-#dev to set hyperparameter of the model
-#test to evaluate the performance of the model
+    X_test, X_dev, y_test, y_dev = train_test_split(
+        X_dev_test, y_dev_test, test_size=(dev_frac)/dev_test_frac, shuffle=True
+    )
 
 
-#Train model
-# Learn the digits on the train subset
-clf.fit(X_train, y_train)
 
-#Part:Get test set predictions
-# Predict the value of the digit on the test subset
-predicted = clf.predict(X_test)
 
+    # if testing on the same as training set: the performance metrics may overestimate the goodness of the model
+    #you want to test on "unseen" samples.
+    #train to train model
+    #dev to set hyperparameter of the model
+    #test to evaluate the performance of the model
+
+
+    #Train model
+    # Learn the digits on the train subset
+    clf.fit(X_train, y_train)
+
+    #Part:Get test set predictions
+    # Predict the value of the digit on the test subset
+    test_predicted = clf.predict(X_test)
+    train_predicted = clf.predict(X_train)
+    dev_predicted = clf.predict(X_dev)
+    report_test = classification_report(y_test, test_predicted,output_dict=True, zero_division = 1)
+    report_train = classification_report(y_train, train_predicted,output_dict=True, zero_division = 1)
+    report_dev = classification_report(y_dev, dev_predicted,output_dict=True, zero_division = 1)
+    print(f"C = {cur_h_params['C']}, Gamma = {cur_h_params['gamma']}, Train Accuracy = {report_train['accuracy']}, Dev Accuracy = {report_dev['accuracy']}, Test Accuracy = {report_test['accuracy']}")
+
+    best_accuracy = -999
+    if report_test['accuracy'] > best_accuracy:
+        best_accuracy = report_test['accuracy']
+        best_params = cur_h_params
+
+print("Best combination of C and Gamma are : ", cur_h_params)
 ###############################################################################
 # Below we visualize the first 4 test samples and show their predicted
 # digit value in the title.
@@ -124,7 +161,7 @@ predicted = clf.predict(X_test)
 #PART: Sanity check of predictions
 
 _, axes = plt.subplots(nrows=1, ncols=4, figsize=(10, 3))
-for ax, image, prediction in zip(axes, X_test, predicted):
+for ax, image, prediction in zip(axes, X_test, test_predicted):
     ax.set_axis_off()
     image = image.reshape(8, 8)
     ax.imshow(image, cmap=plt.cm.gray_r, interpolation="nearest")
@@ -132,20 +169,9 @@ for ax, image, prediction in zip(axes, X_test, predicted):
 
 ###############################################################################
 # :func:`~sklearn.metrics.classification_report` builds a text report showing
-# the main classification metrics.
-
-#PART: Compute evaluation metrics
-print(
-    f"Classification report for classifier {clf}:\n"
-    f"{metrics.classification_report(y_test, predicted)}\n"
-)
+# the main classification metrics
 
 ###############################################################################
 # We can also plot a :ref:`confusion matrix <confusion_matrix>` of the
 # true digit values and the predicted digit values.
 
-disp = metrics.ConfusionMatrixDisplay.from_predictions(y_test, predicted)
-disp.figure_.suptitle("Confusion Matrix")
-print(f"Confusion matrix:\n{disp.confusion_matrix}")
-
-plt.show()
