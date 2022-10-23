@@ -47,28 +47,42 @@ x_train, y_train, x_dev, y_dev, x_test, y_test = train_dev_test_split(
 
 # PART: Define the model
 # Create a classifier: a support vector classifier
-clf = svm.SVC()
-# define the evaluation metric
-metric = metrics.accuracy_score
+models_of_choice=[svm.SVC()]
+for clf in models_of_choice:
 
 
-actual_model_path = tune_and_save(
-    clf, x_train, y_train, x_dev, y_dev, metric, h_param_comb, model_path=None
-)
+
+    # define the evaluation metric
+    metric = metrics.accuracy_score
 
 
-# 2. load the best_model
-best_model = load(actual_model_path)
+    actual_model_path = tune_and_save(
+        clf, x_train, y_train, x_dev, y_dev, metric, h_param_comb, model_path=None
+    )
 
-# PART: Get test set predictions
-# Predict the value of the digit on the test subset
-predicted = best_model.predict(x_test)
 
-pred_image_viz(x_test, predicted)
+    # 2. load the best_model
+    best_model = load(actual_model_path)
 
-# 4. report the test set accurancy with that best model.
-# PART: Compute evaluation metrics
+    # PART: Get test set predictions
+    # Predict the value of the digit on the test subset
+    predicted = best_model.predict(x_test)
+
+    pred_image_viz(x_test, predicted)
+
+    # 4. report the test set accurancy with that best model.
+    # PART: Compute evaluation metrics
+    print(
+        f"Classification report for classifier {clf}:\n"
+        f"{metrics.classification_report(y_test, predicted)}\n"
+    )
+
+from sklearn.tree import DecisionTreeClassifier
+
+clf2 = DecisionTreeClassifier()
+clf2 = clf2.fit(x_train,y_train)
+predicted_dt = clf2.predict(x_test)
 print(
-    f"Classification report for classifier {clf}:\n"
+    f"Classification report for classifier {clf2}:\n"
     f"{metrics.classification_report(y_test, predicted)}\n"
 )
