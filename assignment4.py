@@ -1,36 +1,14 @@
-"""
-================================
-Recognizing hand-written digits
-================================
-
-This example shows how scikit-learn can be used to recognize images of
-hand-written digits, from 0-9.
-
-"""
-import numpy as np
-# Author: Gael Varoquaux <gael dot varoquaux at normalesup dot org>
-# License: BSD 3 clause
-
-# Standard scientific Python imports
 import matplotlib.pyplot as plt
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import f1_score
+from joblib import dump
+from sklearn import svm, tree
+import pdb
+import numpy as np
 
-# Import datasets, classifiers and performance metrics
+
 from sklearn import datasets, svm, metrics
 from sklearn.model_selection import train_test_split
-
-###############################################################################
-# Digits dataset
-# --------------
-#
-# The digits dataset consists of 8x8
-# pixel images of digits. The ``images`` attribute of the dataset stores
-# 8x8 arrays of grayscale values for each image. We will use these arrays to
-# visualize the first 4 images. The ``target`` attribute of the dataset stores
-# the digit each image represents and this is included in the title of the 4
-# plots below.
-#
-# Note: if we were working from image files (e.g., 'png' files), we would load
-# them using :func:`matplotlib.pyplot.imread`.
 
 digits = datasets.load_digits()
 
@@ -39,21 +17,6 @@ for ax, image, label in zip(axes, digits.images, digits.target):
     ax.set_axis_off()
     ax.imshow(image, cmap=plt.cm.gray_r, interpolation="nearest")
     ax.set_title("Training: %i" % label)
-
-###############################################################################
-# Classification
-# --------------
-#
-# To apply a classifier on this data, we need to flatten the images, turning
-# each 2-D array of grayscale values from shape ``(8, 8)`` into shape
-# ``(64,)``. Subsequently, the entire dataset will be of shape
-# ``(n_samples, n_features)``, where ``n_samples`` is the number of images and
-# ``n_features`` is the total number of pixels in each image.
-#
-# We can then split the data into train and test subsets and fit a support
-# vector classifier on the train samples. The fitted classifier can
-# subsequently be used to predict the value of the digit for the samples
-# in the test subset.
 
 # flatten the images
 n_samples = len(digits.images)
@@ -68,15 +31,10 @@ test_frac = 0.1
 dev_frac = 0.1
 
 
-
 n_samples = len(digits.images)
 data = digits.images.reshape((n_samples, -1))
 
 
-#PART: define train/dev/test splits of experiment protocol
-# train to train model
-# dev to set hyperparameters of the model
-# test to evaluate the performance of the model
 dev_test_frac = 1-train_frac
 X_train1, X_dev_test1, y_train1, y_dev_test1 = train_test_split(
     data, digits.target, test_size=dev_test_frac, shuffle=True
@@ -117,12 +75,8 @@ X_test5, X_dev5, y_test5, y_dev5 = train_test_split(
 )
 
 
-
 from sklearn.tree import DecisionTreeClassifier
 clf1 = DecisionTreeClassifier(random_state=0)
-
-
-
 
 
 
@@ -212,3 +166,10 @@ predicted_dev2 = clf1.predict(X_dev2)
 label = pd.DataFrame(predicted_dev2,columns=['Predicted'])
 label['Actual']= y_dev2
 print(label)
+
+
+best_param_config = "_".join(
+        [h + "=" + str(best_h_paramsdt) for h in best_h_paramsdt]
+    )
+best_param_config
+dump(clf,"decision_tree" + "_" + best_param_config + ".joblib")
