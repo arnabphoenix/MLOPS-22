@@ -1,14 +1,9 @@
 from flask import Flask, request, jsonify
-
 from joblib import load
-
-
 app = Flask(__name__)
-svm_clf = load("model.joblib")
+svm_clf = load("ad.joblib")
 
-@app.route("/", methods = ["GET"])
-def hello_world():
-    return "<p>Hello, World!</p>"
+
 
 
 @app.route("/sm", methods = ["POST"])

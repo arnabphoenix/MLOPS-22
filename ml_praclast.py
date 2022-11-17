@@ -7,6 +7,11 @@ import pdb
 import numpy as np
 from sklearn import datasets, svm, metrics
 from sklearn.model_selection import train_test_split
+#resize(image, (100, 100)).shape(100, 100)
+
+# Import datasets, classifiers and performance metrics
+from sklearn import datasets, svm, metrics
+from sklearn.model_selection import train_test_split
 
 # 1. set the ranges of hyper parameters
 gamma_list = [0.01, 0.005]
@@ -15,7 +20,11 @@ c_list = [0.1, 0.2, 0.5]
 h_param_comb = [{'gamma':g, 'C':c} for g in gamma_list for c in c_list]
 
 assert len(h_param_comb) == len(gamma_list)*len(c_list)
+
+
 report = pd.DataFrame(h_param_comb)
+print(report.head())
+
 
 train_frac = 0.8
 test_frac = 0.1
@@ -31,7 +40,18 @@ for ax, image, label in zip(axes, digits.images, digits.target):
     ax.imshow(image, cmap=plt.cm.gray_r, interpolation="nearest")
     ax.set_title("Training: %i" % label)
 
-p(clf,"SVM" + "_" + best_param_config + ".joblib")        
+
+#PART: data pre-processing -- to remove some noise, to normalize data, format the data to be consumed by mode
+# flatten the images
+n_samples = len(digits.images)
+#digits = datasets.load_digits()
+data = digits.images
+a  = data
+#data = resize(data, (1797,10, 10))
+#print('Resized image: ')
+#print(data[0].shape)
+data = digits.images.reshape((n_samples, -1))
+
 #PART: define train/dev/test splits of experiment protocol
 # train to train model
 # dev to set hyperparameters of the model
@@ -96,8 +116,7 @@ for cur_h_params in h_param_comb:
         print("Found new best acc with :"+str(cur_h_params))
         print("New best val accuracy:" + str(cur_acc1))
 
-
 best_param_config = "_".join(
         [h + "=" + str(best_h_params) for h in best_h_params]
     )
-dump(clf,"SVM" + "_" + best_param_config + ".joblib")        p(clf,"SVM" + "_" + best_param_config + ".joblib")        
+dump(clf,"SVM" + "_" + best_param_config + ".joblib")  
