@@ -105,16 +105,16 @@ for cur_h_params in h_param_comb:
         #print("New best val accuracy:" + str(cur_acc1))
 
 
-a=accuracy_score(y_test, predicted_test)
-print("test accuracy:",a)
-b=f1_score(y_test.reshape(-1,1), predicted_test.reshape(-1,1), average='macro')
-print("test macro-f1:",b)
+accuracy_val=accuracy_score(y_test, predicted_test)
+print("test accuracy:",accuracy_val)
+f1=f1_score(y_test.reshape(-1,1), predicted_test.reshape(-1,1), average='macro')
+print("test macro-f1:",f1)
 
 best_param_config = "_".join(
         [h + "=" + str(best_h_params) for h in best_h_params]
     )
 val=28
 
-#dump(clf,"svm" + "_" + best_param_config + "random_state" + str(val)+".joblib")
-#dump(clf,"svm" + "_" + best_param_config + "random_state" + str(val)+".joblib") 
+
+
 dump(clf,"models/"+"Svm" + "_" + str(best_param_config) +"Random_state: "+str(val)+".joblib")
